@@ -4,7 +4,7 @@
 ///|
 pub fn string_error(_a : Float) -> Result[Float, String] {
   if _a == 0.0 {
-    return Err("Error")
+    return Err("zero")
   }
   Ok(_a)
   
@@ -23,7 +23,7 @@ pub fn record_error(_a : Float) -> Result[Float, E2] {
   if _a == 0.0 {
     return Err({ line: 420, column: 0 })
   } else if _a == 1.0 {
-    return Err({ line: 69, column: 69 })
+    return Err({ line: 77, column: 2 })
   }
   Ok(_a)
 }

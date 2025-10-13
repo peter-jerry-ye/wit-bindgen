@@ -9,6 +9,7 @@
 //! [Component Model]: https://component-model.bytecodealliance.org/
 
 #![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 #[cfg(not(feature = "rustc-dep-of-std"))]
 extern crate alloc;
@@ -873,8 +874,13 @@ pub mod examples;
 pub mod rt;
 
 #[cfg(feature = "async")]
+#[allow(deprecated)]
+pub use rt::async_support::backpressure_set;
+#[cfg(feature = "async-spawn")]
+pub use rt::async_support::spawn;
+#[cfg(feature = "async")]
 pub use rt::async_support::{
-    backpressure_set, block_on, spawn, yield_async, yield_blocking, AbiBuffer, FutureRead,
-    FutureReader, FutureWrite, FutureWriteCancel, FutureWriteError, FutureWriter, StreamRead,
-    StreamReader, StreamResult, StreamWrite, StreamWriter,
+    backpressure_dec, backpressure_inc, block_on, yield_async, yield_blocking, AbiBuffer,
+    FutureRead, FutureReader, FutureWrite, FutureWriteCancel, FutureWriteError, FutureWriter,
+    StreamRead, StreamReader, StreamResult, StreamWrite, StreamWriter,
 };

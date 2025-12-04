@@ -11,9 +11,9 @@ use wit_bindgen_core::{
     abi::{self, AbiVariant, Bindgen, Bitcast, Instruction, LiftLower, WasmSignature, WasmType},
     uwrite, uwriteln,
     wit_parser::{
-        Alignment, ArchitectureSize, Docs, Enum, Flags, FlagsRepr, Function, FunctionKind, Int,
-        InterfaceId, Record, Resolve, Result_, SizeAlign, Tuple, Type, TypeDefKind, TypeId,
-        Variant, WorldId, WorldKey,
+        Alignment, ArchitectureSize, Docs, Enum, Flags, FlagsRepr, Function, Int, InterfaceId,
+        Record, Resolve, Result_, SizeAlign, Tuple, Type, TypeDefKind, TypeId, Variant, WorldId,
+        WorldKey,
     },
     AsyncFilterSet, Direction, Files, InterfaceGenerator as CoreInterfaceGenerator, Ns, Source,
     WorldGenerator,
@@ -1014,7 +1014,7 @@ impl InterfaceGenerator<'_> {
                 Some(result) => self
                     .gen
                     .pkg_resolver
-                    .type_name(self.name, result, true)
+                    .type_name(self.name, result)
                     .to_string(),
                 None => "Unit".into(),
             };
@@ -1267,14 +1267,11 @@ impl InterfaceGenerator<'_> {
             .or_default()
             .insert(ty);
         let result = match result_type {
-            Some(ty) => self.gen.pkg_resolver.type_name(self.name, ty, true),
+            Some(ty) => self.gen.pkg_resolver.type_name(self.name, ty),
             None => "Unit".into(),
         };
 
-        let type_name = self
-            .gen
-            .pkg_resolver
-            .type_name(self.name, &Type::Id(ty), true);
+        let type_name = self.gen.pkg_resolver.type_name(self.name, &Type::Id(ty));
         let name = result.to_upper_camel_case();
         let kind = match payload_for {
             PayloadFor::Future => "future",
@@ -1421,7 +1418,7 @@ pub let static_{table_name}: {ffi}{camel_kind}VTable[{result}]  = {table_name}()
             .params
             .iter()
             .map(|(name, ty)| {
-                let ty = self.gen.pkg_resolver.type_name(self.name, ty, true);
+                let ty = self.gen.pkg_resolver.type_name(self.name, ty);
                 format!("{name} : {ty}")
             })
             .collect::<Vec<_>>();
@@ -1430,7 +1427,7 @@ pub let static_{table_name}: {ffi}{camel_kind}VTable[{result}]  = {table_name}()
         let (async_prefix, async_suffix) = if async_ { ("async ", "") } else { ("", "") };
         let result_type = match &sig.result_type {
             None => "Unit".into(),
-            Some(ty) => self.gen.pkg_resolver.type_name(self.name, ty, true),
+            Some(ty) => self.gen.pkg_resolver.type_name(self.name, ty),
         };
         format!(
             "pub {async_prefix}fn {}({params}) -> {}{async_suffix}",
@@ -1456,7 +1453,7 @@ impl<'a> wit_bindgen_core::InterfaceGenerator<'a> for InterfaceGenerator<'a> {
                 format!(
                     "{} : {}",
                     field.name.to_moonbit_ident(),
-                    self.gen.pkg_resolver.type_name(self.name, &field.ty, true),
+                    self.gen.pkg_resolver.type_name(self.name, &field.ty),
                 )
             })
             .collect::<Vec<_>>()
@@ -1693,7 +1690,7 @@ impl<'a> wit_bindgen_core::InterfaceGenerator<'a> for InterfaceGenerator<'a> {
             .map(|case| {
                 let name = case.name.to_upper_camel_case();
                 if let Some(ty) = case.ty {
-                    let ty = self.gen.pkg_resolver.type_name(self.name, &ty, true);
+                    let ty = self.gen.pkg_resolver.type_name(self.name, &ty);
                     format!("{name}({ty})")
                 } else {
                     name.to_string()
@@ -2012,7 +2009,7 @@ impl<'a, 'b> FunctionBindgen<'a, 'b> {
             .gen
             .gen
             .pkg_resolver
-            .type_name(self.gen.name, ty, false);
+            .type_constructor(self.gen.name, ty);
         let lifted = self.locals.tmp("lifted");
 
         let cases = cases
@@ -2162,11 +2159,11 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                 Int::U8 => {
                     let op = &operands[0];
                     let flag = self.locals.tmp("flag");
-                    let ty =
-                        self.gen
-                            .gen
-                            .pkg_resolver
-                            .type_name(self.gen.name, &Type::Id(*ty), false);
+                    let ty = self
+                        .gen
+                        .gen
+                        .pkg_resolver
+                        .type_constructor(self.gen.name, &Type::Id(*ty));
                     uwriteln!(
                         self.src,
                         r#"
@@ -2178,11 +2175,11 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                 Int::U16 | Int::U32 => {
                     let op = &operands[0];
                     let flag = self.locals.tmp("flag");
-                    let ty =
-                        self.gen
-                            .gen
-                            .pkg_resolver
-                            .type_name(self.gen.name, &Type::Id(*ty), false);
+                    let ty = self
+                        .gen
+                        .gen
+                        .pkg_resolver
+                        .type_constructor(self.gen.name, &Type::Id(*ty));
                     uwriteln!(
                         self.src,
                         r#"
@@ -2194,11 +2191,11 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                 Int::U64 => {
                     let op = &operands[0];
                     let flag = self.locals.tmp("flag");
-                    let ty =
-                        self.gen
-                            .gen
-                            .pkg_resolver
-                            .type_name(self.gen.name, &Type::Id(*ty), false);
+                    let ty = self
+                        .gen
+                        .gen
+                        .pkg_resolver
+                        .type_constructor(self.gen.name, &Type::Id(*ty));
                     uwriteln!(
                         self.src,
                         r#"
@@ -2217,7 +2214,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                         self.gen
                             .gen
                             .pkg_resolver
-                            .type_name(self.gen.name, &Type::Id(*ty), true),
+                            .type_name(self.gen.name, &Type::Id(*ty)),
                         operands[0]
                     ));
                 }
@@ -2227,14 +2224,14 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                         self.gen
                             .gen
                             .pkg_resolver
-                            .type_name(self.gen.name, &Type::Id(*ty), true),
+                            .type_name(self.gen.name, &Type::Id(*ty)),
                         operands[0]
                     ));
                 }
                 Int::U64 => {
                     results.push(format!(
                         "{}(({}).reinterpret_as_uint().to_uint64() | (({}).reinterpret_as_uint().to_uint64() << 32))",
-                        self.gen.gen.pkg_resolver.type_name(self.gen.name, &Type::Id(*ty), true),
+                        self.gen.gen.pkg_resolver.type_name(self.gen.name, &Type::Id(*ty)),
                         operands[0],
                         operands[1]
                     ));
@@ -2248,7 +2245,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                     .gen
                     .gen
                     .pkg_resolver
-                    .type_name(self.gen.name, &Type::Id(*ty), false);
+                    .type_constructor(self.gen.name, &Type::Id(*ty));
                 uwrite!(
                     self.src,
                     r#"
@@ -2263,7 +2260,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                     .gen
                     .gen
                     .pkg_resolver
-                    .type_name(self.gen.name, &Type::Id(*ty), false);
+                    .type_constructor(self.gen.name, &Type::Id(*ty));
 
                 results.push(format!(
                     "{}::{}({})",
@@ -2296,7 +2293,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                     self.gen
                         .gen
                         .pkg_resolver
-                        .type_name(self.gen.name, &Type::Id(*ty), true)
+                        .type_name(self.gen.name, &Type::Id(*ty))
                 ));
             }
 
@@ -2424,7 +2421,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                     .gen
                     .gen
                     .pkg_resolver
-                    .type_name(self.gen.name, &Type::Id(*ty), true);
+                    .type_name(self.gen.name, &Type::Id(*ty));
                 let lifted = self.locals.tmp("lifted");
                 let op = &operands[0];
 
@@ -2486,7 +2483,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                 self.gen
                     .gen
                     .pkg_resolver
-                    .type_name(self.gen.name, &Type::Id(*ty), true),
+                    .type_name(self.gen.name, &Type::Id(*ty)),
                 operands[0]
             )),
 
@@ -2659,11 +2656,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                 let size = self.gen.gen.sizes.size(element).size_wasm32();
                 let _align = self.gen.gen.sizes.align(element).align_wasm32();
                 let address = self.locals.tmp("address");
-                let ty = self
-                    .gen
-                    .gen
-                    .pkg_resolver
-                    .type_name(self.gen.name, element, true);
+                let ty = self.gen.gen.pkg_resolver.type_name(self.gen.name, element);
                 let index = self.locals.tmp("index");
 
                 self.gen.ffi_imports.insert(ffi::MALLOC);
@@ -2695,11 +2688,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                 let address = &operands[0];
                 let length = &operands[1];
                 let array = self.locals.tmp("array");
-                let ty = self
-                    .gen
-                    .gen
-                    .pkg_resolver
-                    .type_name(self.gen.name, element, true);
+                let ty = self.gen.gen.pkg_resolver.type_name(self.gen.name, element);
                 let size = self.gen.gen.sizes.size(element).size_wasm32();
                 // let align = self.gen.gen.sizes.align(element);
                 let index = self.locals.tmp("index");
@@ -2753,55 +2742,11 @@ impl Bindgen for FunctionBindgen<'_, '_> {
             }
 
             Instruction::CallInterface { func, async_ } => {
-                let name = match func.kind {
-                    FunctionKind::Freestanding => {
-                        format!(
-                            "{}{}",
-                            self.gen
-                                .gen
-                                .pkg_resolver
-                                .qualify_package(self.gen.name, self.func_interface),
-                            func.name.to_moonbit_ident()
-                        )
-                    }
-                    FunctionKind::AsyncFreestanding => {
-                        format!(
-                            "{}{}",
-                            self.gen
-                                .gen
-                                .pkg_resolver
-                                .qualify_package(self.gen.name, self.func_interface),
-                            func.name.to_moonbit_ident()
-                        )
-                    }
-                    FunctionKind::Constructor(ty) => {
-                        let name = self.gen.gen.pkg_resolver.type_name(
-                            self.gen.name,
-                            &Type::Id(ty),
-                            false,
-                        );
-                        format!(
-                            "{}::{}",
-                            name,
-                            func.name.replace("[constructor]", "").to_moonbit_ident()
-                        )
-                    }
-                    FunctionKind::Method(ty)
-                    | FunctionKind::Static(ty)
-                    | FunctionKind::AsyncMethod(ty)
-                    | FunctionKind::AsyncStatic(ty) => {
-                        let name = self.gen.gen.pkg_resolver.type_name(
-                            self.gen.name,
-                            &Type::Id(ty),
-                            false,
-                        );
-                        format!(
-                            "{}::{}",
-                            name,
-                            func.name.split(".").last().unwrap().to_moonbit_ident()
-                        )
-                    }
-                };
+                let name =
+                    self.gen
+                        .gen
+                        .pkg_resolver
+                        .func_call(self.gen.name, func, self.func_interface);
 
                 let args = operands.join(", ");
 
@@ -2813,10 +2758,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                                 (
                                     res.clone(),
                                     res,
-                                    self.gen
-                                        .gen
-                                        .pkg_resolver
-                                        .type_name(self.gen.name, &ty, true),
+                                    self.gen.gen.pkg_resolver.type_name(self.gen.name, &ty),
                                 )
                             }
                             None => ("_ignore".into(), "".into(), "Unit".into()),
@@ -2878,10 +2820,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                     Some(ty) => {
                         let ty = format!(
                             "({})",
-                            self.gen
-                                .gen
-                                .pkg_resolver
-                                .type_name(self.gen.name, &ty, true)
+                            self.gen.gen.pkg_resolver.type_name(self.gen.name, &ty)
                         );
                         let result = self.locals.tmp("result");
                         if func.result.is_some() {
@@ -3157,7 +3096,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                     .gen
                     .gen
                     .pkg_resolver
-                    .type_name(self.gen.name, &Type::Id(*ty), true);
+                    .type_name(self.gen.name, &Type::Id(*ty));
                 let ffi = self
                     .gen
                     .gen
@@ -3219,7 +3158,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                     .gen
                     .gen
                     .pkg_resolver
-                    .type_name(self.gen.name, &Type::Id(*ty), true);
+                    .type_name(self.gen.name, &Type::Id(*ty));
                 let ffi = self
                     .gen
                     .gen

@@ -671,7 +671,7 @@ impl InterfaceGenerator<'_> {
 
             let (import_module, import_name) = self.resolve.wasm_import_name(
                 ManglingAndAbi::Legacy(if async_ {
-                    LiftLowerAbi::AsyncStackful
+                    LiftLowerAbi::AsyncCallback
                 } else {
                     LiftLowerAbi::Sync
                 }),
@@ -928,7 +928,7 @@ impl InterfaceGenerator<'_> {
                 .qualify_package(self.name, FFI_DIR);
 
             let (task_return_module, task_return_name) = self.resolve.wasm_import_name(
-                ManglingAndAbi::Legacy(LiftLowerAbi::AsyncStackful),
+                ManglingAndAbi::Legacy(LiftLowerAbi::AsyncCallback),
                 WasmImport::Func {
                     interface: self.interface,
                     func,

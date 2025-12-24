@@ -697,7 +697,6 @@ impl InterfaceGenerator<'_> {
         } else {
             let mut bindgen = FunctionBindgen::new(
                 self,
-                &func.name,
                 self.name,
                 func.params
                     .iter()
@@ -789,7 +788,6 @@ impl InterfaceGenerator<'_> {
 
         let mut bindgen = FunctionBindgen::new(
             &mut toplevel_generator,
-            &func.name,
             self.name,
             (0..sig.params.len()).map(|i| format!("p{i}")).collect(),
         );
@@ -972,7 +970,6 @@ impl InterfaceGenerator<'_> {
 
             let mut bindgen = FunctionBindgen::new(
                 self,
-                "INVALID",
                 self.name,
                 (0..sig.results.len()).map(|i| format!("p{i}")).collect(),
             );
@@ -1486,7 +1483,6 @@ enum DeferredTaskReturn {
 
 struct FunctionBindgen<'a, 'b> {
     interface_gen: &'b mut InterfaceGenerator<'a>,
-    func_name: &'b str,
     func_interface: &'b str,
     params: Box<[String]>,
     src: String,
@@ -1502,7 +1498,6 @@ struct FunctionBindgen<'a, 'b> {
 impl<'a, 'b> FunctionBindgen<'a, 'b> {
     fn new(
         r#gen: &'b mut InterfaceGenerator<'a>,
-        func_name: &'b str,
         func_interface: &'b str,
         params: Box<[String]>,
     ) -> FunctionBindgen<'a, 'b> {
@@ -1512,7 +1507,6 @@ impl<'a, 'b> FunctionBindgen<'a, 'b> {
         });
         Self {
             interface_gen: r#gen,
-            func_name,
             func_interface,
             params,
             src: String::new(),
@@ -2337,7 +2331,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
 
             Instruction::IterBasePointer => results.push("iter_base".into()),
 
-            Instruction::CallWasm { sig, .. } => {
+            Instruction::CallWasm { sig, name } => {
                 let assignment = match &sig.results[..] {
                     [result] => {
                         let ty = wasm_type(*result);
@@ -2352,7 +2346,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                     _ => unreachable!(),
                 };
 
-                let func_name = self.func_name.to_upper_camel_case();
+                let func_name = name.to_upper_camel_case();
 
                 let operands = operands.join(", ");
                 // TODO: handle this to support async functions

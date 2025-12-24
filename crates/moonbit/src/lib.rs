@@ -2033,7 +2033,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                 );
             }
 
-            Instruction::OptionLift { payload, ty } => {
+            Instruction::OptionLift { ty, .. } => {
                 let some = self.blocks.pop().unwrap();
                 let _none = self.blocks.pop().unwrap();
 
@@ -2041,17 +2041,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                 let lifted = self.locals.tmp("lifted");
                 let op = &operands[0];
 
-                let payload = if self
-                    .interface_gen
-                    .world_gen
-                    .pkg_resolver
-                    .non_empty_type(Some(*payload))
-                    .is_some()
-                {
-                    some.results.into_iter().next().unwrap()
-                } else {
-                    "None".into()
-                };
+                let assignment = some.results.first().unwrap();
 
                 let some = some.body;
 
@@ -2062,7 +2052,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                         0 => Option::None
                         1 => {{
                             {some}
-                            Option::Some({payload})
+                            Option::Some({assignment})
                         }}
                         _ => panic()
                     }}

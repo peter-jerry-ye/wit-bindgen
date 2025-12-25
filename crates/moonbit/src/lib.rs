@@ -654,7 +654,9 @@ impl InterfaceGenerator<'_> {
 
             uwriteln!(
                 self.ffi,
-                r#"fn {ffi_import_name}({params}) {result_type} = "{import_module}" "{import_name}""#
+                r#"
+                fn {ffi_import_name}({params}) {result_type} = "{import_module}" "{import_name}"
+                "#
             );
         }
 
@@ -802,6 +804,7 @@ impl InterfaceGenerator<'_> {
         uwrite!(
             self.ffi,
             r#"
+            #doc(hidden)
             pub fn {func_name}({params}) -> {result_type} {{
                 {src}
             }}
@@ -822,6 +825,7 @@ impl InterfaceGenerator<'_> {
 
         let export = format!(
             r#"
+            #doc(hidden)
             pub fn {func_name}({params}) -> {result_type} {{
                 {}{func_name}({})
             }}
@@ -965,6 +969,7 @@ impl InterfaceGenerator<'_> {
             uwrite!(
                 self.ffi,
                 r#"
+                #doc(hidden)
                 pub fn {func_name}({params}) -> Unit {{
                     {src}
                 }}
@@ -980,6 +985,7 @@ impl InterfaceGenerator<'_> {
             );
             let export = format!(
                 r#"
+                #doc(hidden)
                 pub fn {func_name}({params}) -> Unit {{
                     {}{func_name}({})
                 }}
@@ -1183,6 +1189,7 @@ impl<'a> wit_bindgen_core::InterfaceGenerator<'a> for InterfaceGenerator<'a> {
             uwrite!(
                 self.ffi,
                 r#"
+                #doc(hidden)
                 pub fn {func_name}(handle : Int) -> Unit {{
                     {name}::dtor(handle)
                 }}
@@ -1199,6 +1206,7 @@ impl<'a> wit_bindgen_core::InterfaceGenerator<'a> for InterfaceGenerator<'a> {
 
             let export = format!(
                 r#"
+                #doc(hidden)
                 pub fn {func_name}(handle : Int) -> Unit {{
                     {}{func_name}(handle)
                 }}

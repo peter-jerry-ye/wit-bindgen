@@ -2442,7 +2442,9 @@ impl Bindgen for FunctionBindgen<'_, '_> {
             }
 
             Instruction::Return { amt, .. } => {
-                self.use_ffi(ffi::FREE);
+                if !self.cleanup.is_empty() || self.needs_cleanup_list {
+                    self.use_ffi(ffi::FREE);
+                }
                 for clean in &self.cleanup {
                     let address = &clean.address;
                     uwriteln!(self.src, "mbt_ffi_free({address})",);

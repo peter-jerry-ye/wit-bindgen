@@ -13,11 +13,10 @@ use wit_bindgen_core::{
     abi::{self, AbiVariant, Bindgen, Bitcast, Instruction, LiftLower, WasmType},
     uwrite, uwriteln,
     wit_parser::{
-        Alignment, ArchitectureSize, Docs, Enum, Flags, FlagsRepr, Function, Int, InterfaceId,
-        LiftLowerAbi, Mangling, ManglingAndAbi, Param, Record, Resolve, ResourceIntrinsic,
-        Result_,
-        SizeAlign, Tuple, Type, TypeId, Variant, WasmExport, WasmExportKind, WasmImport, WorldId,
-        WorldKey,
+        Alignment, ArchitectureSize, Docs, Enum, Flags, FlagsRepr, Function, Handle, Int,
+        InterfaceId, LiftLowerAbi, Mangling, ManglingAndAbi, Param, Record, Resolve,
+        ResourceIntrinsic, Result_, SizeAlign, Tuple, Type, TypeDefKind, TypeId, Variant,
+        WasmExport, WasmExportKind, WasmImport, WorldId, WorldKey,
     },
 };
 
@@ -1497,15 +1496,15 @@ impl<'a> wit_bindgen_core::InterfaceGenerator<'a> for InterfaceGenerator<'a> {
     }
 
     fn type_future(&mut self, _id: TypeId, _name: &str, _ty: &Option<Type>, _docs: &Docs) {
-        unimplemented!() // Not needed
+        // Not needed. They will become `FutureR[T]` in MoonBit.
     }
 
     fn type_stream(&mut self, _id: TypeId, _name: &str, _ty: &Option<Type>, _docs: &Docs) {
-        unimplemented!() // Not needed
+        // Not needed. They will become `StreamR[T]` in MoonBit.
     }
 
     fn type_builtin(&mut self, _id: TypeId, _name: &str, _ty: &Type, _docs: &Docs) {
-        unimplemented!();
+        // Not needed.
     }
 }
 
@@ -2382,6 +2381,7 @@ impl Bindgen for FunctionBindgen<'_, '_> {
 
             Instruction::CallWasm { sig, name } => {
                 let assignment = match &sig.results[..] {
+                    [] => String::new(),
                     [result] => {
                         let ty = wasm_type(*result);
                         let result = self.locals.tmp("result");
@@ -2389,9 +2389,6 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                         results.push(result);
                         assignment
                     }
-
-                    [] => String::new(),
-
                     _ => unreachable!(),
                 };
 
@@ -2740,9 +2737,28 @@ impl Bindgen for FunctionBindgen<'_, '_> {
                 results.push(format!("{lifted_func_name}({op})"));
                 uwriteln!(self.interface_gen.ffi, "{}", lift);
             }
-            Instruction::ErrorContextLower { .. }
-            | Instruction::ErrorContextLift { .. }
-            | Instruction::DropHandle { .. } => todo!(),
+            Instruction::ErrorContextLower { .. } | Instruction::ErrorContextLift { .. } => todo!(),
+
+            Instruction::DropHandle { ty } => {
+                let op = &operands[0];
+                match ty {
+                    Type::Id(id) => match &self.interface_gen.resolve.types[*id].kind {
+                        TypeDefKind::Handle(Handle::Own(_)) => {
+                            let constructor = self
+                                .interface_gen
+                                .world_gen
+                                .pkg_resolver
+                                .type_constructor(self.interface_gen.name, ty);
+                            uwriteln!(self.src, "let _ = {constructor}::drop({op});");
+                        }
+                        TypeDefKind::Future(_) | TypeDefKind::Stream(_) => {
+                            uwriteln!(self.src, "let _ = {op};");
+                        }
+                        _ => unreachable!(),
+                    },
+                    _ => unreachable!(),
+                }
+            }
             Instruction::FixedLengthListLift { .. } => todo!(),
             Instruction::FixedLengthListLower { .. } => todo!(),
             Instruction::FixedLengthListLowerToMemory { .. } => todo!(),

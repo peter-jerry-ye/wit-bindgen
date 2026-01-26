@@ -97,7 +97,7 @@ impl LanguageMethods for MoonBit {
         config: &crate::config::WitConfig,
         _args: &[String],
     ) -> bool {
-        config.async_
+        config.error_context
     }
 
     fn verify(&self, runner: &Runner, verify: &crate::Verify) -> anyhow::Result<()> {

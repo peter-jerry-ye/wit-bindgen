@@ -205,6 +205,9 @@ impl PkgResolver {
                         }
                         _ => format!("Array[{}]", self.type_name(this, &ty)),
                     },
+                    TypeDefKind::FixedLengthList(ty, _) => {
+                        format!("FixedArray[{}]", self.type_name(this, &ty))
+                    }
                     TypeDefKind::Tuple(tuple) => {
                         format!(
                             "({})",

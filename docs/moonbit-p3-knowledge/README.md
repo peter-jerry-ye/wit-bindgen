@@ -11,6 +11,11 @@ This directory gives a future contributor enough context to continue the
 MoonBit Component Model async performance work without inheriting unrelated
 prototype changes.
 
+The unresolved MoonBit resource-ownership design is organized as a
+[wayfinder decision map](https://github.com/peter-jerry-ye/wit-bindgen/issues/16).
+Its native sub-issue and dependency relationships show the current research
+frontier; the map is not an accepted upstream plan.
+
 ## Start here
 
 The smallest, safest next task is:
@@ -50,6 +55,7 @@ The next task intentionally changes only that scalar lowering for `u8`.
 | Topic | Status | Current answer |
 |---|---|---|
 | [Byte fast path](topics/wit-bindgen-byte-fast-path.md) | supported | Bulk-lower the existing byte snapshot; do not redesign ownership |
+| [Resource transfer semantics](topics/component-model-resource-transfer-semantics.md) | supported | `STARTING` preserves own arguments; `STARTED` transfers them; borrows settle on terminal delivery |
 | [Transfer ownership](topics/component-model-ownership.md) | investigating | Resource move, buffer lifetime, and settlement are separate concerns |
 | [Resource ownership cell](topics/resource-cell-and-codegen-seam.md) | investigating | Keep owner rep, canonical handle, and any cell token distinct; direct opacity requires a codegen seam change |
 | [MoonBit residual runtime cost](topics/moonbit-p3-runtime-cost.md) | investigating | After byte specialization, remaining Rust gap is guest/runtime work |

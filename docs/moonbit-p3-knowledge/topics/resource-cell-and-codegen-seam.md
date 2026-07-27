@@ -2,6 +2,11 @@
 
 Status: design investigation, not an implementation decision
 
+Discussion and dependent decisions are tracked in the
+[resource ownership wayfinder map](https://github.com/peter-jerry-ye/wit-bindgen/issues/16).
+The pinned Component Model rules are summarized separately in
+[`component-model-resource-transfer-semantics.md`](component-model-resource-transfer-semantics.md).
+
 ## Question
 
 Can generated MoonBit detect use-after-move, double drop, and escaped borrows
@@ -101,7 +106,7 @@ Foo(cell_token)
        ▼
 Resource cell
   canonical_handle
-  state: owned | borrowed(lease) | taken | dropped | expired
+  state: owned | pending-start | borrowed(lease) | taken | dropped | expired
   resource type/instance domain
 ```
 
@@ -182,7 +187,11 @@ representation:
 lift own   → Owned(handle)
 lift borrow→ Borrowed(handle, live lease)
 
-Owned   -- lower-own --> Taken
+Owned   -- prepare async own --> PendingStart(handle)
+PendingStart -- STARTED -----------------> Taken
+PendingStart -- CANCELLED_BEFORE_STARTED -> Owned
+
+Owned   -- synchronous lower-own --> Taken
 Owned   -- drop ------> Dropped
 Owned   -- lower-borrow/read-rep --> Owned
 
@@ -194,8 +203,8 @@ Taken/Dropped/Expired -- any consuming operation --> trap
 
 Open semantic details include:
 
-- the exact ownership commit point if canonical lowering traps after the
-  dynamic state transition;
+- how generated guest code observes `STARTED` and
+  `CANCELLED_BEFORE_STARTED` closely enough to settle Pending transfer;
 - whether outgoing borrow needs a count, a single operation lease, or a
   different guard;
 - how an async incoming borrow's lease is represented and invalidated;
@@ -211,6 +220,15 @@ These must be resolved against the
 and
 [async concurrency design](https://github.com/WebAssembly/component-model/blob/7972c14a6c4825fbdc7b7f9f287ae003c9ec8345/design/mvp/Concurrency.md),
 not inferred from a Rust `RefCell`.
+
+The pinned semantics already resolve two important cases:
+
+- `STARTING` means arguments have not been lifted and an async `own<T>` has not
+  transferred; `STARTED` commits that transfer, while
+  `CANCELLED_BEFORE_STARTED` preserves it;
+- a canonical trap tears down the store and has no ownership rollback
+  protocol. Recoverable rollback is needed for explicit pre-start
+  cancellation, not for a canonical trap.
 
 ## Required tests before selecting a representation
 
@@ -266,8 +284,8 @@ cost is either small or can be removed from proven single-owner paths.
   does it conflict with assumptions elsewhere in MoonBit FFI generation?
 - Should the Generated ABI interface be a deliberately public but undocumented
   convention, or should lift/lower move to the resource's defining package?
-- Where does the Component Model define the ownership commit point needed to
-  recover or invalidate a cell after a lowering trap?
+- How should generated MoonBit observe async `STARTED` and
+  `CANCELLED_BEFORE_STARTED` without leaking a broad task-state interface?
 - What is the minimal correct lease for incoming and outgoing async borrows?
 - Can the generator prove enough single-owner cases to bypass dynamic cells
   without splitting the user interface into many ownership variants?

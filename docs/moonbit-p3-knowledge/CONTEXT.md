@@ -42,6 +42,12 @@ Evidence that an incoming borrowed Resource value is still within the dynamic
 call or asynchronous scope in which its Canonical handle is valid.
 _Avoid_: Ownership, reference count
 
+**Pending transfer**:
+A proposed Resource-cell state for an async `own<T>` argument while its
+subtask is still `STARTING`: cancellation before start restores ownership,
+while `STARTED` commits the move.
+_Avoid_: Taken, borrowed
+
 **Generated ABI interface**:
 The code-generator-only operations that turn Resource values into Canonical
 handles and lift Canonical handles back into Resource values. MoonBit does not

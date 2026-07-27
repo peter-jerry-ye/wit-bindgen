@@ -41,10 +41,14 @@ zero.
 
 - `CanonicalOwner` is a proof model, not an accepted public runtime API.
 - A shared resource cell can invalidate aliases but does not implement
-  terminal settlement.
+  terminal settlement. Its representation and code-generation seam remain
+  under investigation in
+  [`resource-cell-and-codegen-seam.md`](resource-cell-and-codegen-seam.md).
 - Finalizers must not replace deterministic resource release.
 - Mutable `FixedArray` does not imply a valid static borrow.
 - Resource optimization is not part of the byte fast path.
+- Making a generated resource opaque is not a local edit while lift/lower is
+  emitted in other generated packages.
 
 ## Required fault matrix before production changes
 

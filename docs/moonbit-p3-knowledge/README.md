@@ -2,7 +2,7 @@
 
 Status: research knowledge snapshot, not an accepted upstream design
 
-Last verified: 2026-07-26
+Last verified: 2026-07-27
 
 Upstream base: `bytecodealliance/wit-bindgen` `main` at
 `7c489011423cd454ec639cfb66f6bedb3e2ede2d`
@@ -51,6 +51,7 @@ The next task intentionally changes only that scalar lowering for `u8`.
 |---|---|---|
 | [Byte fast path](topics/wit-bindgen-byte-fast-path.md) | supported | Bulk-lower the existing byte snapshot; do not redesign ownership |
 | [Transfer ownership](topics/component-model-ownership.md) | investigating | Resource move, buffer lifetime, and settlement are separate concerns |
+| [Resource ownership cell](topics/resource-cell-and-codegen-seam.md) | investigating | Keep owner rep, canonical handle, and any cell token distinct; direct opacity requires a codegen seam change |
 | [MoonBit residual runtime cost](topics/moonbit-p3-runtime-cost.md) | investigating | After byte specialization, remaining Rust gap is guest/runtime work |
 | [async Wasm I/O](topics/async-wasm-io.md) | investigating | Separate custom-ABI stack; its primary output issue is I/O granularity |
 | [Engine scaling](topics/engine-scaling.md) | investigating | Engine count helps only when it creates runnable work |
@@ -69,6 +70,8 @@ upstream source / standards
 - Fixed upstream source and Component Model specifications decide facts.
 - [`evidence-summary.md`](evidence-summary.md) records the measurements used by
   the topic memos.
+- [`CONTEXT.md`](CONTEXT.md) defines the resource ownership vocabulary used by
+  the topic memos.
 - A topic memo states the current interpretation of one question.
 - `start-next-agent.md` is an execution task, not a new design authority.
 - No proposal in this directory is an accepted ADR.
@@ -82,6 +85,8 @@ None of the following has been accepted:
 
 - a public `CanonicalOwner` API;
 - a general resource `RefCell`;
+- a Cell token or shared-cell representation for WIT resources;
+- an opaque resource wrapper with a type-owned generated ABI interface;
 - zero-copy for mutable byte views;
 - eager lowering of resource-bearing payloads;
 - an endpoint vtable in the shared runtime;
